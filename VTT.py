@@ -6,30 +6,39 @@
 #Create a folder and put your video file and VTT.py in it then:
 
 #First you need to import the libraries:
+import sys
 
 import speech_recognition as sr
 import moviepy.editor as mp
 
+
+AUDIO_FILE = "converted.wav"
+RESULT_FILE = 'recognized.txt'
+
+#handling the video file""
+try:
+    movie_file = sys.argv[1] # % python VTT.py movie_file
+except IndexError: # no file was provided in the terminal
+    movie_file = input("Put the name of your video with the extention: ").strip()
+
 #Video to audio conversion : 
-#Put the name of your video and extention of it between ""
-clip = mp.VideoFileClip(r"NAME OF VIDEO FILE.EXTENTION")
-clip.audio.write_audiofile(r"converted.wav")
+clip = mp.VideoFileClip(movie_file)
+clip.audio.write_audiofile(AUDIO_FILE)
 
 
 #Speech recognition :
-r = sr.Recognizer()
-audio = sr.AudioFile("converted.wav")
-with audio as source:
-    audio_file = r.record(source)
+recognizer = sr.Recognizer() 
 
-result = r.recognize_google(audio_file)
+with sr.AudioFile(AUDIO_FILE) as source:
+    audio_data = recognizer.record(source)
 
-result
+text_result = recognizer.recognize_google(audio_data)
+
 
 #Exporting the results : 
-with open('recognized.txt',mode ='w') as file: 
+with open(RESULT_FILE,mode ='w') as file: 
    file.write("Recognized Speech:") 
    file.write("\n") 
-   file.write(result) 
+   file.write(text_result) 
    print("Done!")
 
