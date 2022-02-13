@@ -1,35 +1,26 @@
-#Developed and coded by Momalekiii
-#Used libraries in this code are <--SpeechRecognition 3.8.1 & MoviePy 1.0.3-->
-#follow me on all Social media as : @momalekiii
+# Developed by Momalekiii - @momalekiii
 
-
-#Create a folder and put your video file and VTT.py in it then:
-
-#First you need to import the libraries:
-
-import speech_recognition as sr
 import moviepy.editor as mp
-
-#Video to audio conversion : 
-#Put the name of your video and extention of it between ""
-clip = mp.VideoFileClip(r"NAME OF VIDEO FILE.EXTENTION")
-clip.audio.write_audiofile(r"converted.wav")
+import speech_recognition as sr
 
 
-#Speech recognition :
-r = sr.Recognizer()
-audio = sr.AudioFile("converted.wav")
-with audio as source:
-    audio_file = r.record(source)
+def main():
+    clip = mp.VideoFileClip(r"video.mp4")  # add video name here
+    clip.audio.write_audiofile(r"converted.wav")
 
-result = r.recognize_google(audio_file)
+    recognizer = sr.Recognizer()
+    audio = sr.AudioFile("converted.wav")
+    with audio as source:
+        audio_file = recognizer.record(source)
 
-result
+    result = recognizer.recognize_google(audio_file)
 
-#Exporting the results : 
-with open('recognized.txt',mode ='w') as file: 
-   file.write("Recognized Speech:") 
-   file.write("\n") 
-   file.write(result) 
-   print("Done!")
+    with open("recognized.txt", mode="w") as file:
+        file.write("Recognized Speech:")
+        file.write("\n")
+        file.write(result)
+        print("Done!")
 
+
+if __name__ == '__main__':
+    main()
