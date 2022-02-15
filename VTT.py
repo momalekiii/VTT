@@ -6,12 +6,12 @@
 # Create a folder and put your video file and VTT.py
 
 
-import sys
 import logging
+import sys
 from pathlib import Path
 
-from moviepy import editor
 import speech_recognition
+from moviepy import editor
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
