@@ -4,16 +4,16 @@ Extract Speech/Text from Video to text file(.txt)
 
 ## Installation and Usage
 ### 1- Downloading from Pypi
-`pip install video_to_text`
+`pip install video-to-text-vtt`
 and then you can run it as:
-script: `vtt_run [path/to/YourVideo]` or module: `python -m video_to_text [path/to/YourVideo]`
+script: `vtt_run [path/to/YourVideo]` or module: `python -m video_to_text_VTT [path/to/YourVideo]`
 
 ### 2- Using poetry 
 `git clone https://github.com/momalekiii/VTT.git`
 and then 
 `poetry install`
 and then you can run it by 
-`poetry run vtt_run [path/to/YourVideo]` or `poetry run python -m video_to_text [path/to/YourVideo]`
+`poetry run vtt_run [path/to/YourVideo]` or `poetry run python -m video_to_text_VTT [path/to/YourVideo]`
 
 ### 3- Using pip [locally]
 `git clone https://github.com/momalekiii/VTT.git`
