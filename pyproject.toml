@@ -2,7 +2,7 @@
 name = "video_to_text_VTT"
 version = "0.1.0"
 description = "Converts audio from movies to text"
-authors = ["Momalekiii <Social Media @momalekiii>"]
+authors = ["Mohammad Reza Maleki <m.mlk9928@yahoo.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
