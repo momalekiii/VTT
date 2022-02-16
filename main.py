@@ -1,4 +1,4 @@
-from video_to_text import __main__
+from video_to_text_VTT import __main__
 
 if __name__ == "__main__":
     __main__.main()

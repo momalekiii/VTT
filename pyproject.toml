@@ -2,7 +2,7 @@
 name = "video_to_text_VTT"
 version = "0.1.0"
 description = "Converts audio from movies to text"
-authors = ["Mohammad Reza Maleki <m.mlk9928@yahoo.com>"]
+authors = ["Momalekiii <Social Media @momalekiii>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
@@ -16,7 +16,7 @@ isort = "^5.10.1"
 black = "^22.1.0"
 
 [tool.poetry.scripts]
-vtt_run = 'video_to_text.__main__:main'
+vtt_run = 'video_to_text_VTT.__main__:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
