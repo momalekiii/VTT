@@ -34,7 +34,14 @@ def get_movie_file() -> str:
 
 
 def extract_audio_from_movie(movie_file: str) -> None:
-    clip = editor.VideoFileClip(movie_file)
+    try:
+        clip = editor.VideoFileClip(movie_file)
+    except OSError as e:
+        logging.error(
+            f"MoviePy failed to read the duration of file {movie_file} (Maybe not a video file?"
+        )
+        sys.exit()
+        return
     clip.audio.write_audiofile(AUDIO_FILE)
 
 
