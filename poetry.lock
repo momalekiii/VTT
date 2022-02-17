@@ -44,7 +44,7 @@ unicode_backport = ["unicodedata2"]
 name = "click"
 version = "8.0.3"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -113,7 +113,7 @@ python-versions = ">=3.4"
 name = "importlib-metadata"
 version = "4.11.1"
 description = "Read metadata from Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -300,7 +300,7 @@ python-versions = ">=3.6"
 name = "typing-extensions"
 version = "4.1.1"
 description = "Backported and Experimental Type Hints for Python 3.6+"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -321,7 +321,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 name = "zipp"
 version = "3.7.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -332,7 +332,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "bde293145b371614b44e5ffa028fae8b1460cb71d13c2f36c0b2c431dec1b779"
+content-hash = "ff9abc692664c108ea4aebc8eccf05a6c921a506b5129cf9e4fc274acf3c96e5"
 
 [metadata.files]
 black = [
