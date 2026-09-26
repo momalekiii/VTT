@@ -3,7 +3,7 @@
 Extract speech from a video (or audio) file and generate **real, timestamped
 WebVTT/SRT subtitles** — or plain text if that's all you want.
 
-# Release notes (Awakens 🐉")
+# Release notes (Awakens 🐉)
 
 VTT is finally awake after a long sleep — and it finally makes actual `.vtt`
 files. 😄
