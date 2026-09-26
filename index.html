@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VTT — offline speech-to-subtitles</title>
+<meta name="description" content="VTT turns any video or audio into accurate, timestamped .vtt/.srt subtitles — offline, powered by Whisper. Point it at a file, a folder, or a YouTube link.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06070c;
+    --bg-soft:#0b0d16;
+    --aurora-a:#6366f1;
+    --aurora-b:#22d3ee;
+    --aurora-c:#c026d3;
+    --glass:rgba(255,255,255,.055);
+    --glass-strong:rgba(255,255,255,.09);
+    --glass-border:rgba(255,255,255,.14);
+    --glass-border-strong:rgba(255,255,255,.24);
+    --text:#f2f4fa;
+    --text-dim:rgba(242,244,250,.64);
+    --text-faint:rgba(242,244,250,.4);
+    --accent:#5eead4;
+    --accent-2:#22d3ee;
+    --radius-lg:28px;
+    --radius-md:18px;
+    --radius-sm:10px;
+    --maxw:1080px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    overflow-x:hidden;
+  }
+  img{max-width:100%;}
+  a{color:inherit;}
+  code, .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+
+  ::selection{background:rgba(94,234,212,.28); color:var(--text);}
+
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
+
+  /* ---------- Glass base ---------- */
+  .glass{
+    background:linear-gradient(155deg, var(--glass-strong), var(--glass));
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-lg);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);
+    backdrop-filter:blur(22px) saturate(160%);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,.45),
+      inset 0 1px 0 rgba(255,255,255,.18),
+      inset 0 -1px 0 rgba(255,255,255,.03);
+    position:relative;
+  }
+
+  /* ---------- Nav ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:40;
+    padding:16px 0;
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 18px;
+    border-radius:999px;
+  }
+  .wordmark{
+    display:flex; align-items:center; gap:9px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600; font-size:1.05rem; letter-spacing:.01em;
+    text-decoration:none;
+  }
+  .wordmark .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:linear-gradient(135deg, var(--aurora-b), var(--aurora-a));
+    box-shadow:0 0 14px rgba(34,211,238,.65);
+  }
+  .nav-links{display:flex; align-items:center; gap:22px; font-size:.92rem;}
+  .nav-links a{
+    text-decoration:none; color:var(--text-dim);
+    transition:color .2s ease;
+  }
+  .nav-links a:hover{color:var(--text);}
+  .nav-links .pill{
+    padding:6px 13px; border-radius:999px;
+    background:var(--glass); border:1px solid var(--glass-border);
+    color:var(--text);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:64px 0 10px;
+  }
+  .waveform-stage{
+    position:relative;
+    border-radius:calc(var(--radius-lg) + 10px);
+    overflow:hidden;
+    padding:70px 0 0;
+    isolation:isolate;
+  }
+  .waveform-stage::before{
+    content:"";
+    position:absolute; inset:-20%;
+    background:
+      radial-gradient(38% 46% at 22% 20%, rgba(99,102,241,.55), transparent 60%),
+      radial-gradient(42% 50% at 82% 15%, rgba(34,211,238,.4), transparent 60%),
+      radial-gradient(48% 55% at 55% 100%, rgba(192,38,211,.28), transparent 65%);
+    filter:blur(40px);
+    z-index:0;
+    animation:drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{ transform:translate3d(0,0,0) scale(1); }
+    100%{ transform:translate3d(1.5%, -2%, 0) scale(1.05); }
+  }
+  .bars{
+    position:relative; z-index:1;
+    display:flex; align-items:flex-end; justify-content:center;
+    gap:3px; height:150px; padding:0 12px;
+  }
+  .bars span{
+    width:4px; border-radius:3px 3px 0 0;
+    background:linear-gradient(180deg, var(--aurora-b), var(--aurora-a) 85%);
+    opacity:.55;
+    animation:bar 2.4s ease-in-out infinite;
+    animation-delay:var(--d);
+    transform-origin:bottom;
+  }
+  @keyframes bar{
+    0%, 100%{ transform:scaleY(var(--h1)); }
+    50%{ transform:scaleY(var(--h2)); }
+  }
+
+  .hero-panel{
+    position:relative; z-index:2;
+    margin:-56px 20px 0;
+    padding:56px clamp(24px, 6vw, 72px) 44px;
+    text-align:center;
+  }
+  .eyebrow-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:7px 14px; border-radius:999px;
+    background:var(--glass-strong); border:1px solid var(--glass-border-strong);
+    font-size:.82rem; color:var(--text-dim);
+    margin-bottom:26px;
+  }
+  .eyebrow-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent); box-shadow:0 0 10px var(--accent);}
+
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:clamp(2.15rem, 4.6vw, 3.7rem);
+    line-height:1.08;
+    letter-spacing:-.01em;
+    margin:0 0 20px;
+  }
+  .lede{
+    font-size:1.1rem; line-height:1.65;
+    color:var(--text-dim);
+    max-width:52ch;
+    margin:0 auto 36px;
+  }
+  .lede code{
+    font-size:.92em; color:var(--text);
+    background:rgba(255,255,255,.08);
+    padding:.12em .4em; border-radius:5px;
+  }
+
+  .cta-row{display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:34px;}
+  .btn{
+    display:inline-flex; align-items:center; gap:9px;
+    padding:13px 24px; border-radius:999px;
+    font-size:.95rem; font-weight:500;
+    text-decoration:none; cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--accent), var(--aurora-a));
+    color:#05070d; font-weight:600;
+    box-shadow:0 10px 30px rgba(94,234,212,.22);
+  }
+  .btn-primary:hover{box-shadow:0 14px 36px rgba(94,234,212,.32);}
+  .btn-ghost{
+    background:var(--glass); border-color:var(--glass-border-strong);
+    color:var(--text);
+  }
+  .btn-ghost:hover{background:var(--glass-strong);}
+
+  .install-line{
+    display:inline-flex; align-items:center; gap:14px;
+    padding:12px 12px 12px 22px; border-radius:999px;
+    background:rgba(0,0,0,.35); border:1px solid var(--glass-border);
+    font-size:.92rem;
+  }
+  .install-line .prompt{color:var(--accent);}
+  .install-line code{color:var(--text); background:none; padding:0;}
+  .copy-btn{
+    display:flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:50%;
+    background:var(--glass-strong); border:1px solid var(--glass-border);
+    color:var(--text-dim); cursor:pointer;
+    transition:color .2s ease, background .2s ease;
+    flex:none;
+  }
+  .copy-btn:hover{color:var(--text); background:rgba(255,255,255,.14);}
+  .copy-btn svg{width:15px; height:15px;}
+
+  /* ---------- Sections ---------- */
+  section{padding:96px 0;}
+  .section-head{max-width:56ch; margin:0 0 44px;}
+  .section-head h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600; font-size:clamp(1.5rem, 2.6vw, 2rem);
+    margin:0 0 12px; letter-spacing:-.01em;
+  }
+  .section-head p{color:var(--text-dim); line-height:1.65; margin:0; font-size:1rem;}
+
+  /* ---------- Terminal ---------- */
+  .terminal{
+    padding:0; overflow:hidden;
+  }
+  .terminal-bar{
+    display:flex; align-items:center; gap:8px;
+    padding:14px 20px; border-bottom:1px solid var(--glass-border);
+  }
+  .terminal-bar .tdot{width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.16);}
+  .terminal-bar .label{margin-left:8px; font-size:.8rem; color:var(--text-faint);}
+  .terminal-body{
+    padding:24px 26px 28px;
+    font-size:.9rem; line-height:1.85;
+  }
+  .terminal-body .prompt{color:var(--accent);}
+  .terminal-body .cmd{color:var(--text);}
+  .terminal-body .flag{color:#c4b5fd;}
+  .terminal-body .out{color:var(--text-dim);}
+  .terminal-body .ts{color:var(--accent-2);}
+  .terminal-body .path{color:var(--text);}
+  .cursor{
+    display:inline-block; width:7px; height:1em; background:var(--accent);
+    vertical-align:text-bottom; margin-left:2px;
+    animation:blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ---------- Feature grid ---------- */
+  .grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:18px;
+  }
+  .feature{
+    padding:30px 26px; border-radius:var(--radius-md);
+  }
+  .feature .icon{
+    width:38px; height:38px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.07); border:1px solid var(--glass-border);
+    margin-bottom:18px;
+  }
+  .feature .icon svg{width:18px; height:18px; stroke:var(--accent);}
+  .feature h3{
+    font-family:'Space Grotesk', sans-serif; font-size:1.05rem; font-weight:600;
+    margin:0 0 8px;
+  }
+  .feature p{color:var(--text-dim); font-size:.92rem; line-height:1.6; margin:0;}
+
+  /* ---------- Before/after ---------- */
+  .compare{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px;
+  }
+  .compare .panel{padding:22px 24px 24px; border-radius:var(--radius-md);}
+  .compare .panel .tag{
+    display:inline-block; font-size:.74rem; padding:3px 10px; border-radius:999px;
+    margin-bottom:14px; color:var(--text-faint);
+    border:1px solid var(--glass-border);
+  }
+  .compare .old{opacity:.72;}
+  .compare .old .tag{color:#fca5a5; border-color:rgba(252,165,165,.3);}
+  .compare .new .tag{color:var(--accent); border-color:rgba(94,234,212,.32);}
+  .compare pre{
+    margin:0; font-size:.84rem; line-height:1.7; white-space:pre-wrap;
+    color:var(--text-dim);
+  }
+  .compare .new pre .ts{color:var(--accent-2);}
+  .compare .new pre .txt{color:var(--text);}
+
+  /* ---------- CLI reference ---------- */
+  .ref{padding:26px 28px;}
+  .ref-row{
+    display:flex; align-items:baseline; gap:18px;
+    padding:13px 0; border-bottom:1px solid rgba(255,255,255,.06);
+    font-size:.9rem; flex-wrap:wrap;
+  }
+  .ref-row:last-child{border-bottom:none;}
+  .ref-row code{color:var(--accent-2); flex:none;}
+  .ref-row span{color:var(--text-dim);}
+
+  /* ---------- Footer ---------- */
+  footer{padding:60px 0 80px;}
+  .footer-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 28px; border-radius:999px; flex-wrap:wrap; gap:14px;
+  }
+  .footer-inner p{margin:0; color:var(--text-faint); font-size:.85rem;}
+  .footer-links{display:flex; gap:20px; font-size:.85rem;}
+  .footer-links a{text-decoration:none; color:var(--text-dim);}
+  .footer-links a:hover{color:var(--text);}
+
+  @media (max-width:860px){
+    .grid{grid-template-columns:1fr;}
+    .compare{grid-template-columns:1fr;}
+    .nav-links .only-desktop{display:none;}
+  }
+  @media (max-width:600px){
+    .hero-panel{margin:-40px 8px 0; padding:44px 20px 32px;}
+    section{padding:64px 0;}
+    .cta-row{flex-direction:column; align-items:stretch;}
+    .btn{justify-content:center;}
+    .install-line{width:100%; justify-content:space-between;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .waveform-stage::before, .bars span, .cursor{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <div class="nav-inner glass">
+      <a href="#top" class="wordmark"><span class="dot"></span>VTT</a>
+      <nav class="nav-links">
+        <a href="#install" class="only-desktop">Install</a>
+        <a href="#features" class="only-desktop">Features</a>
+        <a href="https://github.com/momalekiii/VTT" class="pill">GitHub</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <div class="wrap">
+    <section class="hero" style="padding-top:24px;">
+      <div class="waveform-stage">
+        <div class="bars" id="bars" aria-hidden="true"></div>
+      </div>
+
+      <div class="hero-panel glass">
+        <span class="eyebrow-badge"><span class="dot"></span>v2.0.0 — now with real subtitles</span>
+        <h1>Subtitles that know<br>where every word lands.</h1>
+        <p class="lede">
+          VTT turns a video, an audio file, or a YouTube link into accurate,
+          timestamped <code>.vtt</code> / <code>.srt</code> subtitles — running
+          entirely offline on Whisper. No API keys, no uploads, no internet required.
+        </p>
+
+        <div class="cta-row">
+          <a href="https://github.com/momalekiii/VTT" class="btn btn-primary">View on GitHub</a>
+          <a href="#install" class="btn btn-ghost">Get started</a>
+        </div>
+
+        <div class="install-line mono">
+          <span><span class="prompt">$</span> <code>pip install video-to-text-vtt</code></span>
+          <button class="copy-btn" id="copyBtn" aria-label="Copy install command" type="button">
+            <svg id="copyIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TERMINAL DEMO -->
+  <div class="wrap">
+    <section style="padding-top:8px;">
+      <div class="section-head">
+        <h2>One command in, real captions out</h2>
+        <p>Point it at a file, a whole folder, or a link. It figures out the rest.</p>
+      </div>
+
+      <div class="terminal glass">
+        <div class="terminal-bar">
+          <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+          <span class="label mono">zsh</span>
+        </div>
+        <div class="terminal-body mono">
+<div><span class="prompt">$</span> <span class="cmd">vtt_run</span> <span class="path">lecture.mp4</span> <span class="flag">-lang</span> fa <span class="flag">--model</span> medium</div>
+<div class="out">Transcribing: lecture.mp4</div>
+<div class="out">&nbsp;&nbsp;-&gt; <span class="path">lecture.vtt</span></div>
+<div>&nbsp;</div>
+<div class="out">WEBVTT</div>
+<div class="out">&nbsp;</div>
+<div><span class="ts">00:00:00.000 --&gt; 00:00:03.240</span></div>
+<div class="out">در این جلسه دربارهٔ معماری سیستم صحبت می‌کنیم.</div>
+<div>&nbsp;</div>
+<div><span class="ts">00:00:03.240 --&gt; 00:00:07.010</span></div>
+<div class="out">شروع می‌کنیم با نمای کلی از جریان داده.<span class="cursor"></span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="wrap">
+    <section id="features">
+      <div class="section-head">
+        <h2>Built for the whole pipeline</h2>
+        <p>From a single clip to a folder of lectures, VTT handles the boring parts so you can read the transcript, not fight the tool.</p>
+      </div>
+
+      <div class="grid">
+        <div class="feature glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="18" x2="12" y2="22"></line></svg></div>
+          <h3>Runs fully offline</h3>
+          <p>Whisper does the transcribing locally — no cloud API, no rate limits, no audio ever leaves your machine.</p>
+        </div>
+        <div class="feature glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg></div>
+          <h3>Real timestamps</h3>
+          <p>Genuine <code class="mono">.vtt</code> and <code class="mono">.srt</code> files with per-segment timing — not a single block of raw text.</p>
+        </div>
+        <div class="feature glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="13" height="13" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"></path></svg></div>
+          <h3>Batch &amp; YouTube</h3>
+          <p>Hand it a folder and it works through every clip, or drop in a YouTube link and skip the download step.</p>
+        </div>
+        <div class="feature glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"></path><path d="M4 12h10"></path><path d="M4 19h7"></path></svg></div>
+          <h3>~100 languages</h3>
+          <p>Auto-detects the spoken language, or pin it yourself with <code class="mono">-lang</code> for faster, more reliable results.</p>
+        </div>
+        <div class="feature glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"></path></svg></div>
+          <h3>CPU or GPU</h3>
+          <p>Pick a model size and device that fit your machine, from a quick <code class="mono">tiny</code> pass to a <code class="mono">large-v3</code> run on CUDA.</p>
+        </div>
+        <div class="feature glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div>
+          <h3>One binary, one command</h3>
+          <p>Install with pip, run <code class="mono">vtt_run</code>. No config files, no accounts, nothing to set up first.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- BEFORE / AFTER -->
+  <div class="wrap">
+    <section>
+      <div class="section-head">
+        <h2>v1 wrote a text file. v2 writes subtitles.</h2>
+        <p>The name always promised .vtt files — v2 is the first version that actually delivers them.</p>
+      </div>
+
+      <div class="compare">
+        <div class="panel glass old">
+          <span class="tag mono">v1 · output.txt</span>
+          <pre class="mono">در این جلسه دربارهٔ معماری سیستم صحبت می‌کنیم شروع می‌کنیم با نمای کلی از جریان داده</pre>
+        </div>
+        <div class="panel glass new">
+          <span class="tag mono">v2 · output.vtt</span>
+          <pre class="mono"><span class="ts">00:00:00.000 --&gt; 00:00:03.240</span>
+<span class="txt">در این جلسه دربارهٔ معماری سیستم صحبت می‌کنیم.</span>
+
+<span class="ts">00:00:03.240 --&gt; 00:00:07.010</span>
+<span class="txt">شروع می‌کنیم با نمای کلی از جریان داده.</span></pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- INSTALL / CLI REFERENCE -->
+  <div class="wrap">
+    <section id="install">
+      <div class="section-head">
+        <h2>Install &amp; reference</h2>
+        <p>Available on PyPI, or clone the repo and run it straight from source.</p>
+      </div>
+
+      <div class="terminal glass" style="margin-bottom:18px;">
+        <div class="terminal-bar">
+          <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+          <span class="label mono">install</span>
+        </div>
+        <div class="terminal-body mono">
+<div><span class="prompt">$</span> <span class="cmd">pip install video-to-text-vtt</span></div>
+<div><span class="prompt">$</span> <span class="cmd">pip install</span> "video-to-text-vtt[youtube]"<span class="out">  # optional, for URL input</span></div>
+        </div>
+      </div>
+
+      <div class="ref glass">
+        <div class="ref-row"><code class="mono">-lang, --language</code><span>Language code (e.g. <code class="mono">fa</code>, <code class="mono">en</code>) — omit to auto-detect</span></div>
+        <div class="ref-row"><code class="mono">--model</code><span><code class="mono">tiny</code> · <code class="mono">base</code> · <code class="mono">small</code> · <code class="mono">medium</code> · <code class="mono">large-v3</code></span></div>
+        <div class="ref-row"><code class="mono">--device</code><span><code class="mono">auto</code> · <code class="mono">cpu</code> · <code class="mono">cuda</code></span></div>
+        <div class="ref-row"><code class="mono">--format</code><span><code class="mono">vtt</code> · <code class="mono">srt</code> · <code class="mono">txt</code> · <code class="mono">all</code></span></div>
+        <div class="ref-row"><code class="mono">--offset / --duration</code><span>Transcribe just a slice of the file, in seconds</span></div>
+        <div class="ref-row"><code class="mono">-o, --output</code><span>Output file, or output folder when batching</span></div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-inner glass">
+      <p>MIT licensed · built by momalekiii</p>
+      <div class="footer-links">
+        <a href="https://github.com/momalekiii/VTT">GitHub</a>
+        <a href="https://pypi.org/project/video-to-text-vtt/">PyPI</a>
+        <a href="https://github.com/momalekiii/VTT/blob/main/CHANGELOG.md">Changelog</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Generate ambient waveform bars
+  (function(){
+    var el = document.getElementById('bars');
+    var n = 64;
+    var html = '';
+    for (var i = 0; i < n; i++){
+      var h1 = (0.18 + Math.random()*0.55).toFixed(2);
+      var h2 = Math.min(1, parseFloat(h1) + 0.25 + Math.random()*0.35).toFixed(2);
+      var delay = (Math.random()*2.4).toFixed(2) + 's';
+      var height = 16 + Math.random()*130;
+      html += '<span style="--h1:'+h1+';--h2:'+h2+';--d:'+delay+';height:'+height.toFixed(0)+'px"></span>';
+    }
+    el.innerHTML = html;
+  })();
+
+  // Copy install command
+  (function(){
+    var btn = document.getElementById('copyBtn');
+    var icon = document.getElementById('copyIcon');
+    var check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    var original = icon.outerHTML;
+    btn.addEventListener('click', function(){
+      var text = 'pip install video-to-text-vtt';
+      try{
+        navigator.clipboard.writeText(text);
+      }catch(e){}
+      btn.innerHTML = check;
+      setTimeout(function(){ btn.innerHTML = original; }, 1400);
+    });
+  })();
+</script>
+
+</body>
+</html>
