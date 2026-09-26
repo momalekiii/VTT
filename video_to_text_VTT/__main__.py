@@ -1,93 +1,94 @@
-# Developed by Momalekiii
-# Used libraries in this code are <--SpeechRecognition 3.8.1 & MoviePy 1.0.3-->
-# follow me on all Social media as : @momalekiii
-
-
-# Create a folder and put your video file and VTT.py
-
 from __future__ import annotations
 
-import logging
 import sys
 from pathlib import Path
+from typing import Optional, Tuple
 
 import click
-import speech_recognition
-from moviepy import editor
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+from . import audio_extractor, transcriber, youtube
+from .subtitle_writer import WRITERS
 
-AUDIO_FILE = "converted.wav"
-RESULT_FILE = "recognized.txt"
+VIDEO_EXTENSIONS = {".mp4", ".mkv", ".mov", ".avi", ".webm", ".flv"}
 
 
-def extract_audio_from_movie(movie_file: str) -> None:
-    try:
-        clip = editor.VideoFileClip(movie_file)
-    except OSError as e:
-        logging.error(
-            f"MoviePy failed to read the duration of file {movie_file} (Maybe not a video file?)"
+def _iter_inputs(path_or_url: str) -> Tuple[list, bool]:
+    """Return (list_of_paths_or_urls, is_batch)."""
+    if youtube.looks_like_url(path_or_url):
+        return [path_or_url], False
+
+    p = Path(path_or_url)
+    if p.is_dir():
+        files = sorted(
+            f for f in p.iterdir()
+            if f.suffix.lower() in VIDEO_EXTENSIONS | audio_extractor.AUDIO_EXTENSIONS
         )
-        sys.exit()
-    logging.info("Please wait until the audio extraction is finished")
-    clip.audio.write_audiofile(AUDIO_FILE)
+        return files, True
+    return [p], False
 
 
-def get_text_from_audio(
-    duration: float | None = None, offset: float | None = None, language: str = "en-US"
-) -> str:
-    recognizer = speech_recognition.Recognizer()
-    with speech_recognition.AudioFile(AUDIO_FILE) as source:
-        audio_data = recognizer.record(source, duration=duration, offset=offset)
-    logging.info("converting audio to text. This may take some time")
-    try:
-        text_result: str = recognizer.recognize_google(audio_data, language=language)
-    except speech_recognition.RequestError as e:
-        logging.error(
-            f"{repr(e)}. Maybe the audio is too long."
-            " Consider tweeking --duration, --offset, and/or --language option(s)"
+def _resolve_source(item, offset: Optional[float], duration: Optional[float]) -> Path:
+    if isinstance(item, str) and youtube.looks_like_url(item):
+        click.echo(f"Downloading: {item}")
+        downloaded = youtube.download_audio(item)
+        if offset or duration:
+            return audio_extractor.extract_audio(downloaded, offset=offset, duration=duration)
+        return downloaded
+    return audio_extractor.extract_audio(item, offset=offset, duration=duration)
+
+
+def _output_path_for(source_name: str, output: Optional[str], fmt: str, is_batch: bool) -> Path:
+    if output and not is_batch:
+        return Path(output)
+    stem = Path(source_name).stem
+    if output and is_batch:
+        return Path(output) / f"{stem}.{fmt}"
+    return Path(f"{stem}.{fmt}")
+
+
+@click.command()
+@click.argument("path", type=str)
+@click.option("--duration", type=float, default=None, help="Audio length to transcribe, in seconds.")
+@click.option("--offset", type=float, default=None, help="How far from the start to begin, in seconds.")
+@click.option("-lang", "--language", "language", type=str, default=None,
+              help="Language code (e.g. en, fa, es). Omit to auto-detect.")
+@click.option("--model", "model_size", type=click.Choice(
+    ["tiny", "base", "small", "medium", "large-v3"]), default="small",
+    help="Whisper model size. Bigger = more accurate, slower.")
+@click.option("--device", type=click.Choice(["auto", "cpu", "cuda"]), default="auto",
+              help="Run the model on CPU or GPU.")
+@click.option("-o", "--output", "output", type=str, default=None,
+              help="Output file (single input) or output directory (batch/folder input).")
+@click.option("--format", "fmt", type=click.Choice(["vtt", "srt", "txt", "all"]), default="vtt",
+              help="Subtitle/output format. 'all' writes vtt+srt+txt.")
+def main(path, duration, offset, language, model_size, device, output, fmt):
+    """Extract speech from PATH (a video/audio file, a folder of them, or a
+    YouTube/URL) and write real timestamped subtitles (.vtt / .srt) or plain text.
+    """
+    items, is_batch = _iter_inputs(path)
+    if not items:
+        click.echo("No supported video/audio files found.", err=True)
+        sys.exit(1)
+
+    if is_batch and output:
+        Path(output).mkdir(parents=True, exist_ok=True)
+
+    formats = ["vtt", "srt", "txt"] if fmt == "all" else [fmt]
+
+    for item in items:
+        label = str(item)
+        click.echo(f"Transcribing: {label}")
+        audio_path = _resolve_source(item, offset, duration)
+        segments = transcriber.transcribe(
+            audio_path, model_size=model_size, language=language, device=device,
         )
-        sys.exit()
-    except speech_recognition.UnknownValueError as e:
-        logging.error(
-            f"{repr(e)}. Maybe the audio is not recognized."
-            " Consider tweeking --duration, --offset, and/or --language option(s)"
-        )
-        sys.exit()
-    return text_result
-
-
-def export_result(text_result: str, output: str) -> None:
-    with open(output, mode="w") as file:
-        file.write("Recognized Speech:\n")
-        file.write(text_result)
-    logging.info(f"Done! Check {output} to see the results")
-
-
-@click.command("video-to-text-VVT command line")
-@click.argument("movie_file")
-@click.option("--duration", type=float, help="Audio length [seconds]")
-@click.option("--offset", type=float, help="How far from zero you start [seconds]")
-@click.option(
-    "--language",
-    "-lang",
-    default="en-US",
-    help="Audio language. Supported languages can be found in <http://stackoverflow.com/a/14302134>",
-)
-@click.option("--output", "-o", default=RESULT_FILE, help="The result file")
-def main(
-    movie_file: str,
-    duration: float | None = None,
-    offset: float | None = None,
-    language: str = "en-US",
-    output: str = RESULT_FILE,
-) -> None:
-    if not Path(movie_file).exists():
-        logging.error("File does not exist")
-        return
-    extract_audio_from_movie(movie_file)
-    text_result = get_text_from_audio(duration, offset, language)
-    export_result(text_result, output)
+        if not segments:
+            click.echo(f"  (no speech detected in {label})")
+            continue
+        for f in formats:
+            out_path = _output_path_for(label, output, f, is_batch)
+            WRITERS[f](segments, out_path)
+            click.echo(f"  -> {out_path}")
 
 
 if __name__ == "__main__":

@@ -1,32 +1,30 @@
 [tool.poetry]
-name = "video_to_text_VTT"
-version = "0.1.0"
-description = "Converts audio from movies to text"
-authors = ["Mohammad Reza Maleki <m.mlk9928@yahoo.com>"]
+name = "video-to-text-vtt"
+version = "2.0.0"
+description = "Extract speech from video/audio and generate real timestamped WebVTT/SRT subtitles, offline, via Whisper."
+authors = ["momalekiii"]
 license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/momalekiii/VTT"
+keywords = ["python", "speech-recognition", "video-to-text", "whisper", "subtitles", "vtt", "srt"]
+packages = [{ include = "video_to_text_VTT" }]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-moviepy = "^1.0.3"
-SpeechRecognition = "^3.8.1"
-click = "^8.0.3"
+python = "^3.9"
+faster-whisper = "^1.0.3"
+moviepy = "^2.1.1"
+click = "^8.1.7"
+yt-dlp = { version = "^2024.8.6", optional = true }
 
-[tool.poetry.dev-dependencies]
-mypy = "^0.931"
-isort = "^5.10.1"
-black = "^22.1.0"
+[tool.poetry.extras]
+youtube = ["yt-dlp"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
 
 [tool.poetry.scripts]
-vtt_run = 'video_to_text_VTT.__main__:main'
+vtt_run = "video_to_text_VTT.__main__:main"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.mypy]
-ignore_missing_imports = true 
-follow_imports = "silent"
-strict = true 
-
-[tool.isort]
-profile = "black"
