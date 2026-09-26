@@ -1,4 +1,4 @@
-# video_to_text_VTT
+# VTT 2.0
 
 Extract speech from a video (or audio) file and generate **real, timestamped
 WebVTT/SRT subtitles** — or plain text if that's all you want.
