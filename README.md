@@ -79,10 +79,3 @@ vtt_run "https://youtube.com/watch?v=..." --format vtt
 The CLI is backward-compatible for the common case (`python main.py path/to/video`),
 but the default output is now a real `.vtt` file instead of a `.txt` file. Pass
 `--format txt` if you want the old plain-text behavior.
-
-## About
-Extract Speech/Text from Video — now with real subtitles, offline Whisper
-transcription, batch processing, and YouTube support.
-
-### Topics
-python, python3, speech-recognition, whisper, video-to-text, subtitles, vtt, srt
