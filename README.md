@@ -6,7 +6,7 @@ WebVTT/SRT subtitles** — or use the **VTT Chrome Extension** for live online
 
 ---
 
-## 🧩 New: VTT Chrome Extension ([`momalekiii/vtt-extention`](https://github.com/momalekiii/vtt-extention))
+## 🧩 New: VTT Chrome Extension ([vtt-extention](https://github.com/momalekiii/vtt-extention))
 
 Minimal online subtitle overlay for **YouTube** and **any HTML5 video playing in Chrome**, built for **Persian (`فارسی`)** and **English (`EN`)**:
 
