@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>VTT — offline speech-to-subtitles</title>
-<meta name="description" content="VTT turns any video or audio into accurate, timestamped .vtt/.srt subtitles — offline, powered by Whisper. Point it at a file, a folder, or a YouTube link.">
+<title>VTT — Speech-to-Subtitles CLI &amp; Chrome Extension</title>
+<meta name="description" content="VTT turns any video or audio into accurate, timestamped .vtt/.srt subtitles — plus a minimal Chrome Extension for live Persian &amp; English subtitles on YouTube and any video playing in Chrome.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
     --glass-border-strong:rgba(255,255,255,.24);
     --text:#f2f4fa;
     --text-dim:rgba(242,244,250,.64);
-    --text-faint:rgba(242,244,250,.4);
+    --text-faint:rgba(242,250,250,.4);
     --accent:#5eead4;
     --accent-2:#22d3ee;
     --radius-lg:28px;
@@ -97,6 +97,11 @@
     background:var(--glass); border:1px solid var(--glass-border);
     color:var(--text);
   }
+  .nav-links .pill-accent{
+    padding:6px 13px; border-radius:999px;
+    background:rgba(94,234,212,.14); border:1px solid rgba(94,234,212,.35);
+    color:var(--accent); font-weight:500;
+  }
 
   /* ---------- Hero ---------- */
   .hero{
@@ -169,7 +174,7 @@
   .lede{
     font-size:1.1rem; line-height:1.65;
     color:var(--text-dim);
-    max-width:52ch;
+    max-width:56ch;
     margin:0 auto 36px;
   }
   .lede code{
@@ -221,13 +226,165 @@
 
   /* ---------- Sections ---------- */
   section{padding:96px 0;}
-  .section-head{max-width:56ch; margin:0 0 44px;}
+  .section-head{max-width:58ch; margin:0 0 44px;}
   .section-head h2{
     font-family:'Space Grotesk', sans-serif;
     font-weight:600; font-size:clamp(1.5rem, 2.6vw, 2rem);
     margin:0 0 12px; letter-spacing:-.01em;
   }
   .section-head p{color:var(--text-dim); line-height:1.65; margin:0; font-size:1rem;}
+
+  /* ---------- Chrome Extension Showcase ---------- */
+  .ext-showcase{
+    display:grid;
+    grid-template-columns:1fr 310px;
+    gap:22px;
+    align-items:center;
+    margin-bottom:22px;
+  }
+  .ext-video-demo{
+    position:relative;
+    aspect-ratio:16/9;
+    border-radius:var(--radius-md);
+    background:linear-gradient(165deg, #101426 0%, #070911 100%);
+    border:1px solid var(--glass-border);
+    box-shadow:0 24px 60px rgba(0,0,0,.55);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .ext-video-glow{
+    position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 42%, rgba(99,102,241,.2), transparent 62%);
+    pointer-events:none;
+  }
+  .ext-corner-chip{
+    position:absolute;
+    top:12px; right:12px; z-index:5;
+    display:inline-flex; align-items:center; gap:2px;
+    padding:2px 6px; border-radius:999px;
+    background:rgba(8,10,16,.72);
+    border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(8px);
+    font-size:9.5px;
+    opacity:.16;
+    transform:scale(.94);
+    transform-origin:top right;
+    transition:opacity .2s ease, transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .ext-corner-chip:hover{
+    opacity:1;
+    transform:scale(1);
+    background:rgba(8,10,16,.92);
+    border-color:rgba(94,234,212,.45);
+  }
+  .ext-corner-dot{
+    width:5px; height:5px; border-radius:50%;
+    background:var(--accent); margin-right:2px;
+  }
+  .ext-chip-btn{
+    appearance:none; border:none; background:transparent;
+    color:var(--text-dim); font-size:9.5px; font-weight:600;
+    padding:1px 4px; border-radius:999px; cursor:pointer;
+  }
+  .ext-chip-btn.active{
+    background:rgba(94,234,212,.18); color:var(--accent);
+  }
+  .ext-sub-wrap{
+    position:absolute; left:50%; bottom:48px;
+    transform:translateX(-50%);
+    z-index:6; width:86%; max-width:540px;
+    display:flex; flex-direction:column; align-items:center;
+    transition:opacity .18s ease;
+  }
+  .ext-sub-wrap.hidden{opacity:0; pointer-events:none;}
+  .ext-sub-box{
+    padding:8px 18px; border-radius:11px;
+    background:rgba(8,10,16,.84);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 10px 28px rgba(0,0,0,.58);
+    backdrop-filter:blur(12px);
+    text-align:center;
+    display:flex; flex-direction:column; gap:3px;
+  }
+  .ext-sub-main{
+    color:#f4f6fb; font-weight:600; line-height:1.5; font-size:18px;
+  }
+  .ext-sub-secondary{
+    color:rgba(94,234,212,.9); font-size:12.5px;
+  }
+  .ext-player-bar{
+    position:absolute; bottom:0; left:0; right:0;
+    padding:10px 16px;
+    background:linear-gradient(0deg, rgba(0,0,0,.78), transparent);
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:11.5px; color:var(--text-dim); z-index:4;
+  }
+  .ext-next-btn{
+    appearance:none; border:1px solid var(--glass-border);
+    background:rgba(255,255,255,.08); color:var(--text);
+    border-radius:999px; padding:4px 11px; font-size:11px; cursor:pointer;
+  }
+  .ext-next-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+  /* Popup Mock inside Showcase */
+  .ext-popup-card{
+    background:#080a10;
+    border:1px solid var(--glass-border);
+    border-radius:18px;
+    padding:16px 16px 12px;
+    box-shadow:0 20px 50px rgba(0,0,0,.6);
+    display:flex; flex-direction:column; gap:11px;
+  }
+  .ext-p-head{display:flex; align-items:center; justify-content:space-between;}
+  .ext-p-brand{display:flex; align-items:center; gap:8px;}
+  .ext-p-dot{width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent);}
+  .ext-p-dot.off{background:rgba(255,255,255,.25); box-shadow:none;}
+  .ext-p-title{font-weight:700; font-size:13.5px;}
+  .ext-p-sub{font-size:10.5px; color:var(--text-dim);}
+  .ext-p-box{
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:12px; padding:9px 11px;
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .ext-p-label{display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-dim);}
+  .ext-seg{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:4px;
+    background:rgba(0,0,0,.35); padding:3px; border-radius:8px;
+  }
+  .ext-seg-btn{
+    appearance:none; border:none; background:transparent;
+    color:var(--text-dim); font-family:inherit; font-size:11px; font-weight:600;
+    padding:5px 4px; border-radius:6px; cursor:pointer;
+  }
+  .ext-seg-btn.active{background:rgba(94,234,212,.16); color:var(--accent);}
+  .ext-p-foot{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:10.5px; color:var(--text-faint); padding-top:2px;
+  }
+  .ext-p-foot a{color:var(--text-dim); text-decoration:none;}
+  .ext-p-foot a:hover{color:var(--accent);}
+
+  .ext-steps{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;
+  }
+  .ext-step{
+    padding:22px 24px; border-radius:var(--radius-md);
+  }
+  .ext-step .step-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:50%;
+    background:rgba(94,234,212,.14); border:1px solid rgba(94,234,212,.35);
+    color:var(--accent); font-size:.8rem; font-weight:600;
+    margin-bottom:12px;
+  }
+  .ext-step h3{
+    font-family:'Space Grotesk', sans-serif; font-size:1rem; font-weight:600;
+    margin:0 0 6px;
+  }
+  .ext-step p{color:var(--text-dim); font-size:.88rem; line-height:1.6; margin:0;}
 
   /* ---------- Terminal ---------- */
   .terminal{
@@ -321,6 +478,8 @@
   @media (max-width:860px){
     .grid{grid-template-columns:1fr;}
     .compare{grid-template-columns:1fr;}
+    .ext-showcase{grid-template-columns:1fr;}
+    .ext-steps{grid-template-columns:1fr;}
     .nav-links .only-desktop{display:none;}
   }
   @media (max-width:600px){
@@ -343,7 +502,8 @@
     <div class="nav-inner glass">
       <a href="#top" class="wordmark"><span class="dot"></span>VTT</a>
       <nav class="nav-links">
-        <a href="#install" class="only-desktop">Install</a>
+        <a href="#extension" class="pill-accent">Chrome Extension</a>
+        <a href="#install" class="only-desktop">CLI Install</a>
         <a href="#features" class="only-desktop">Features</a>
         <a href="https://github.com/momalekiii/VTT" class="pill">GitHub</a>
       </nav>
@@ -361,17 +521,22 @@
       </div>
 
       <div class="hero-panel glass">
-        <span class="eyebrow-badge"><span class="dot"></span>v2.0.0 — now with real subtitles</span>
+        <span class="eyebrow-badge"><span class="dot"></span>v2.0 — CLI + New Online Chrome Extension</span>
         <h1>Subtitles that know<br>where every word lands.</h1>
         <p class="lede">
-          VTT turns a video, an audio file, or a YouTube link into accurate,
-          timestamped <code>.vtt</code> / <code>.srt</code> subtitles — running
-          entirely offline on Whisper. No API keys, no uploads, no internet required.
+          Use the <strong>VTT Chrome Extension</strong> for live online <strong>Persian &amp; English</strong>
+          subtitles on YouTube and any video playing in Chrome — or run the offline
+          Whisper CLI to generate timestamped <code>.vtt</code> / <code>.srt</code> files.
         </p>
 
         <div class="cta-row">
-          <a href="https://github.com/momalekiii/VTT" class="btn btn-primary">View on GitHub</a>
-          <a href="#install" class="btn btn-ghost">Get started</a>
+          <a href="vtt-chrome-extension.zip" download="vtt-chrome-extension.zip" class="btn btn-primary">
+            ⬇ Download Chrome Extension (.zip)
+          </a>
+          <a href="vtt-subtitles.user.js" class="btn btn-ghost">
+            ⚡ 1-Click Userscript (.user.js)
+          </a>
+          <a href="https://github.com/momalekiii/VTT" class="btn btn-ghost">View on GitHub</a>
         </div>
 
         <div class="install-line mono">
@@ -384,12 +549,132 @@
     </section>
   </div>
 
+  <!-- CHROME EXTENSION SHOWCASE & FREE INSTALL -->
+  <div class="wrap">
+    <section id="extension" style="padding-top:36px;">
+      <div class="section-head">
+        <h2>New: VTT Chrome Extension (Free Install)</h2>
+        <p>
+          Minimal online subtitles for YouTube and any video playing in Chrome.
+          Built for <strong>Persian (FA)</strong> and <strong>English (EN)</strong> with
+          calm, sentence-paced reading speed and 1-click <code>.vtt</code> / <code>.srt</code> export.
+        </p>
+      </div>
+
+      <div class="ext-showcase">
+        <!-- Interactive Video Player Preview -->
+        <div class="ext-video-demo">
+          <div class="ext-video-glow"></div>
+
+          <div class="ext-corner-chip" title="Faded until hovered">
+            <span class="ext-corner-dot" id="demoChipDot"></span>
+            <button type="button" class="ext-chip-btn active" data-demolang="fa">FA</button>
+            <button type="button" class="ext-chip-btn" data-demolang="en">EN</button>
+            <button type="button" class="ext-chip-btn" data-demolang="both">FA+EN</button>
+            <button type="button" class="ext-chip-btn">🎤</button>
+          </div>
+
+          <div class="ext-sub-wrap" id="demoSubWrap">
+            <div class="ext-sub-box">
+              <div class="ext-sub-main" id="demoSubMain" dir="rtl">
+                در این ویدیو دربارهٔ معماری سیستم و پردازش آنلاین زیرنویس صحبت می‌کنیم.
+              </div>
+              <div class="ext-sub-secondary" id="demoSubSec" style="display:none;">
+                In this video we talk about system architecture and online subtitle processing.
+              </div>
+            </div>
+          </div>
+
+          <div class="ext-player-bar">
+            <span>▶ YouTube / Online Video in Chrome · Hover top-right corner for quick chip</span>
+            <button type="button" class="ext-next-btn" id="demoNextCueBtn">Next Line ⏭</button>
+          </div>
+        </div>
+
+        <!-- Minimal Extension Popup Preview -->
+        <div class="ext-popup-card">
+          <div class="ext-p-head">
+            <div class="ext-p-brand">
+              <span class="ext-p-dot" id="demoPopupDot"></span>
+              <div>
+                <div class="ext-p-title">VTT Subtitles</div>
+                <div class="ext-p-sub" id="demoPopupStatus">Active on playing video</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ext-p-box">
+            <div class="ext-p-label">
+              <span>Subtitle Language</span>
+              <span>زبان زیرنویس</span>
+            </div>
+            <div class="ext-seg">
+              <button type="button" class="ext-seg-btn active" data-demolang="fa">فارسی (FA)</button>
+              <button type="button" class="ext-seg-btn" data-demolang="en">English (EN)</button>
+              <button type="button" class="ext-seg-btn" data-demolang="both">FA + EN</button>
+            </div>
+          </div>
+
+          <div class="ext-p-box">
+            <div class="ext-p-label">
+              <span>Subtitle Size</span>
+              <span>اندازه فونت</span>
+            </div>
+            <div class="ext-seg" id="demoSizeGroup">
+              <button type="button" class="ext-seg-btn" data-demosize="15px">Small</button>
+              <button type="button" class="ext-seg-btn active" data-demosize="18px">Medium</button>
+              <button type="button" class="ext-seg-btn" data-demosize="22px">Large</button>
+            </div>
+          </div>
+
+          <a href="vtt-chrome-extension.zip" download="vtt-chrome-extension.zip" class="btn btn-primary" style="justify-content:center; padding:10px 16px; font-size:.88rem;">
+            ⬇ Download Extension (.zip)
+          </a>
+
+          <div class="ext-p-foot mono">
+            <span>©</span>
+            <a href="https://github.com/momalekiii" target="_blank" rel="noopener">@momalekiii</a>
+            <span>·</span>
+            <a href="https://github.com/momalekiii/VTT" target="_blank" rel="noopener">VTT</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-Step Free Installation -->
+      <div class="ext-steps">
+        <div class="ext-step glass">
+          <span class="step-num mono">1</span>
+          <h3>Download &amp; Unzip</h3>
+          <p>
+            Download <a href="vtt-chrome-extension.zip" download="vtt-chrome-extension.zip" style="color:var(--accent);"><code>vtt-chrome-extension.zip</code></a>
+            and unzip it (or click <a href="vtt-subtitles.user.js" style="color:var(--accent);"><code>vtt-subtitles.user.js</code></a> for 1-click Tampermonkey install).
+          </p>
+        </div>
+        <div class="ext-step glass">
+          <span class="step-num mono">2</span>
+          <h3>Open chrome://extensions</h3>
+          <p>
+            Open <code class="mono" style="color:var(--accent-2);">chrome://extensions</code> in Chrome, Brave, or Edge and toggle
+            <strong>Developer mode</strong> ON in the top-right corner.
+          </p>
+        </div>
+        <div class="ext-step glass">
+          <span class="step-num mono">3</span>
+          <h3>Drop Folder or Load Unpacked</h3>
+          <p>
+            Drag the unzipped folder onto <code>chrome://extensions</code> (or click <strong>Load unpacked</strong>) — Persian &amp; English subtitles start automatically!
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <!-- TERMINAL DEMO -->
   <div class="wrap">
     <section style="padding-top:8px;">
       <div class="section-head">
         <h2>One command in, real captions out</h2>
-        <p>Point it at a file, a whole folder, or a link. It figures out the rest.</p>
+        <p>Point the Python CLI at a file, a whole folder, or a link. It figures out the rest.</p>
       </div>
 
       <div class="terminal glass">
@@ -419,14 +704,14 @@
     <section id="features">
       <div class="section-head">
         <h2>Built for the whole pipeline</h2>
-        <p>From a single clip to a folder of lectures, VTT handles the boring parts so you can read the transcript, not fight the tool.</p>
+        <p>From watching online videos in Chrome to transcribing a folder of local lectures, VTT handles the boring parts.</p>
       </div>
 
       <div class="grid">
         <div class="feature glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="18" x2="12" y2="22"></line></svg></div>
-          <h3>Runs fully offline</h3>
-          <p>Whisper does the transcribing locally — no cloud API, no rate limits, no audio ever leaves your machine.</p>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"></rect><path d="M8 15h8"></path></svg></div>
+          <h3>Chrome Extension</h3>
+          <p>Live online subtitles in Persian (<code class="mono">FA</code>), English (<code class="mono">EN</code>), or bilingual mode on YouTube and any video in Chrome.</p>
         </div>
         <div class="feature glass">
           <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg></div>
@@ -436,7 +721,7 @@
         <div class="feature glass">
           <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="13" height="13" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"></path></svg></div>
           <h3>Batch &amp; YouTube</h3>
-          <p>Hand it a folder and it works through every clip, or drop in a YouTube link and skip the download step.</p>
+          <p>Hand the CLI a folder and it works through every clip, or drop in a YouTube link and skip the download step.</p>
         </div>
         <div class="feature glass">
           <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"></path><path d="M4 12h10"></path><path d="M4 19h7"></path></svg></div>
@@ -450,8 +735,8 @@
         </div>
         <div class="feature glass">
           <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div>
-          <h3>One binary, one command</h3>
-          <p>Install with pip, run <code class="mono">vtt_run</code>. No config files, no accounts, nothing to set up first.</p>
+          <h3>Free &amp; Open Source</h3>
+          <p>MIT licensed by <code class="mono">@momalekiii</code>. Install the Python CLI from PyPI or grab the Chrome Extension zip for free.</p>
         </div>
       </div>
     </section>
@@ -486,7 +771,7 @@
   <div class="wrap">
     <section id="install">
       <div class="section-head">
-        <h2>Install &amp; reference</h2>
+        <h2>CLI Install &amp; Reference</h2>
         <p>Available on PyPI, or clone the repo and run it straight from source.</p>
       </div>
 
@@ -517,8 +802,9 @@
 <footer>
   <div class="wrap">
     <div class="footer-inner glass">
-      <p>MIT licensed · built by momalekiii</p>
+      <p>MIT licensed · built by <a href="https://github.com/momalekiii">@momalekiii</a></p>
       <div class="footer-links">
+        <a href="#extension">Chrome Extension</a>
         <a href="https://github.com/momalekiii/VTT">GitHub</a>
         <a href="https://pypi.org/project/video-to-text-vtt/">PyPI</a>
         <a href="https://github.com/momalekiii/VTT/blob/main/CHANGELOG.md">Changelog</a>
@@ -557,6 +843,80 @@
       btn.innerHTML = check;
       setTimeout(function(){ btn.innerHTML = original; }, 1400);
     });
+  })();
+
+  // Interactive Chrome Extension Demo in Landing Page
+  (function(){
+    var CUES = [
+      {
+        fa: "در این ویدیو دربارهٔ معماری سیستم و پردازش آنلاین زیرنویس صحبت می‌کنیم.",
+        en: "In this video we talk about system architecture and online subtitle processing."
+      },
+      {
+        fa: "هر ویدیویی که در مرورگر کروم پخش شود به صورت خودکار زیرنویس می‌گیرد.",
+        en: "Any video playing in the Chrome browser automatically receives live subtitles."
+      },
+      {
+        fa: "جملات کوتاه با هم ترکیب می‌شوند تا سرعت نمایش زیرنویس کاملاً قابل خواندن باشد.",
+        en: "Short fragments are merged into full sentences so the reading pace is calm and natural."
+      }
+    ];
+    var idx = 0;
+    var lang = "fa";
+    var mainEl = document.getElementById("demoSubMain");
+    var secEl = document.getElementById("demoSubSec");
+    var langBtns = document.querySelectorAll("[data-demolang]");
+    var sizeBtns = document.querySelectorAll("[data-demosize]");
+    var nextBtn = document.getElementById("demoNextCueBtn");
+
+    function renderDemo(){
+      if (!mainEl) return;
+      var item = CUES[idx % CUES.length];
+      if (lang === "fa"){
+        mainEl.textContent = item.fa;
+        mainEl.dir = "rtl";
+        secEl.style.display = "none";
+      } else if (lang === "en"){
+        mainEl.textContent = item.en;
+        mainEl.dir = "ltr";
+        secEl.style.display = "none";
+      } else {
+        mainEl.textContent = item.fa;
+        mainEl.dir = "rtl";
+        secEl.textContent = item.en;
+        secEl.style.display = "block";
+      }
+      langBtns.forEach(function(b){
+        b.classList.toggle("active", b.getAttribute("data-demolang") === lang);
+      });
+    }
+
+    langBtns.forEach(function(b){
+      b.addEventListener("click", function(){
+        lang = b.getAttribute("data-demolang");
+        renderDemo();
+      });
+    });
+
+    sizeBtns.forEach(function(b){
+      b.addEventListener("click", function(){
+        sizeBtns.forEach(function(x){ x.classList.remove("active"); });
+        b.classList.add("active");
+        if (mainEl) mainEl.style.fontSize = b.getAttribute("data-demosize");
+      });
+    });
+
+    if (nextBtn){
+      nextBtn.addEventListener("click", function(){
+        idx = (idx + 1) % CUES.length;
+        renderDemo();
+      });
+    }
+
+    setInterval(function(){
+      idx = (idx + 1) % CUES.length;
+      renderDemo();
+    }, 4200);
   })();
 </script>
 
