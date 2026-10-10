@@ -1,4 +1,4 @@
-# VTT 2.0
+# VTT 2.0.2
 
 Extract speech from a video (or audio) file and generate **real, timestamped
 WebVTT/SRT subtitles** — or use the **VTT Chrome Extension** for live online
@@ -19,11 +19,11 @@ Minimal online subtitle overlay for **YouTube** and **any HTML5 video playing in
 ### ⬇ Free Installation
 
 - **Option A — Full Chrome Extension (`vtt-chrome-extension.zip`)**:
-  1. **[Download `vtt-chrome-extension.zip`](https://github.com/momalekiii/VTT/raw/main/vtt-chrome-extension.zip)** and extract it to a folder.
+  1. **[Download](https://github.com/momalekiii/VTT/raw/main/vtt-chrome-extension.zip)** and extract it to a folder.
   2. Open `chrome://extensions/` and turn **Developer mode** ON.
   3. Drag the extracted folder onto `chrome://extensions/` (or click **Load unpacked**).
 - **Option B — 1-Click Userscript (`vtt-subtitles.user.js`)**:
-  - If you have Tampermonkey or Violentmonkey installed, simply click **[Install `vtt-subtitles.user.js`](https://github.com/momalekiii/VTT/raw/main/vtt-subtitles.user.js)** for a 1-click install with no unzipping.
+  - If you have Tampermonkey or Violentmonkey installed, simply click **[Install](https://github.com/momalekiii/VTT/raw/main/vtt-subtitles.user.js)** for a 1-click install with no unzipping.
 
 ---
 
